@@ -103,6 +103,17 @@ function generateLogId() {
   return `log_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function delayedSync(showMessage = false, attempts = 3, delay = 1500) {
+  for (let i = 0; i < attempts; i += 1) {
+    await sleep(delay);
+    await syncLogsFromGoogleSheets(showMessage && i === attempts - 1);
+  }
+}
+
 function createInputField({ label, type = "number", className, placeholder = "", value = "" }) {
   return `
     <div>
@@ -467,90 +478,66 @@ function renderHistory() {
   const sprint150Items = findSprintHistory(150);
   const sprint300Items = findSprintHistory(300);
 
-  renderHistoryList(
-    deadliftHistory,
-    deadliftItems,
-    (item) => `
-      <div class="history-entry">
-        <p><strong>${item.date}</strong></p>
-        <p>Workout: ${item.sessionType}</p>
-        <p>Sets: ${item.sets || "-"}</p>
-        <p>Reps: ${item.reps || "-"}</p>
-        <p>Weight: ${item.weight || "-"} kg</p>
-      </div>
-    `
-  );
+  renderHistoryList(deadliftHistory, deadliftItems, (item) => `
+    <div class="history-entry">
+      <p><strong>${item.date}</strong></p>
+      <p>Workout: ${item.sessionType}</p>
+      <p>Sets: ${item.sets || "-"}</p>
+      <p>Reps: ${item.reps || "-"}</p>
+      <p>Weight: ${item.weight || "-"} kg</p>
+    </div>
+  `);
 
-  renderHistoryList(
-    backSquatHistory,
-    squatItems,
-    (item) => `
-      <div class="history-entry">
-        <p><strong>${item.date}</strong></p>
-        <p>Workout: ${item.sessionType}</p>
-        <p>Sets: ${item.sets || "-"}</p>
-        <p>Reps: ${item.reps || "-"}</p>
-        <p>Weight: ${item.weight || "-"} kg</p>
-      </div>
-    `
-  );
+  renderHistoryList(backSquatHistory, squatItems, (item) => `
+    <div class="history-entry">
+      <p><strong>${item.date}</strong></p>
+      <p>Workout: ${item.sessionType}</p>
+      <p>Sets: ${item.sets || "-"}</p>
+      <p>Reps: ${item.reps || "-"}</p>
+      <p>Weight: ${item.weight || "-"} kg</p>
+    </div>
+  `);
 
-  renderHistoryList(
-    jumpHistory,
-    jumpItems,
-    (item) => `
-      <div class="history-entry">
-        <p><strong>${item.date}</strong></p>
-        <p>Exercise: ${item.name}</p>
-        <p>Workout: ${item.sessionType}</p>
-        <p>Sets: ${item.sets || "-"}</p>
-        <p>Jumps/Reps: ${item.jumps || "-"}</p>
-        <p>${item.extra ? `Extra: ${item.extra}` : "Extra: -"}</p>
-      </div>
-    `
-  );
+  renderHistoryList(jumpHistory, jumpItems, (item) => `
+    <div class="history-entry">
+      <p><strong>${item.date}</strong></p>
+      <p>Exercise: ${item.name}</p>
+      <p>Workout: ${item.sessionType}</p>
+      <p>Sets: ${item.sets || "-"}</p>
+      <p>Jumps/Reps: ${item.jumps || "-"}</p>
+      <p>${item.extra ? `Extra: ${item.extra}` : "Extra: -"}</p>
+    </div>
+  `);
 
-  renderHistoryList(
-    sprint200History,
-    sprint200Items,
-    (item) => `
-      <div class="history-entry">
-        <p><strong>${item.date}</strong></p>
-        <p>Workout: ${item.sessionType}</p>
-        <p>Best Time: ${item.bestTime || "-"} sec</p>
-        <p>Average Time: ${item.averageTime || "-"} sec</p>
-        <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
-      </div>
-    `
-  );
+  renderHistoryList(sprint200History, sprint200Items, (item) => `
+    <div class="history-entry">
+      <p><strong>${item.date}</strong></p>
+      <p>Workout: ${item.sessionType}</p>
+      <p>Best Time: ${item.bestTime || "-"} sec</p>
+      <p>Average Time: ${item.averageTime || "-"} sec</p>
+      <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
+    </div>
+  `);
 
-  renderHistoryList(
-    sprint150History,
-    sprint150Items,
-    (item) => `
-      <div class="history-entry">
-        <p><strong>${item.date}</strong></p>
-        <p>Workout: ${item.sessionType}</p>
-        <p>Best Time: ${item.bestTime || "-"} sec</p>
-        <p>Average Time: ${item.averageTime || "-"} sec</p>
-        <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
-      </div>
-    `
-  );
+  renderHistoryList(sprint150History, sprint150Items, (item) => `
+    <div class="history-entry">
+      <p><strong>${item.date}</strong></p>
+      <p>Workout: ${item.sessionType}</p>
+      <p>Best Time: ${item.bestTime || "-"} sec</p>
+      <p>Average Time: ${item.averageTime || "-"} sec</p>
+      <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
+    </div>
+  `);
 
-  renderHistoryList(
-    sprint300History,
-    sprint300Items,
-    (item) => `
-      <div class="history-entry">
-        <p><strong>${item.date}</strong></p>
-        <p>Workout: ${item.sessionType}</p>
-        <p>Best Time: ${item.bestTime || "-"} sec</p>
-        <p>Average Time: ${item.averageTime || "-"} sec</p>
-        <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
-      </div>
-    `
-  );
+  renderHistoryList(sprint300History, sprint300Items, (item) => `
+    <div class="history-entry">
+      <p><strong>${item.date}</strong></p>
+      <p>Workout: ${item.sessionType}</p>
+      <p>Best Time: ${item.bestTime || "-"} sec</p>
+      <p>Average Time: ${item.averageTime || "-"} sec</p>
+      <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
+    </div>
+  `);
 }
 
 function buildDeadliftChartData() {
@@ -605,15 +592,11 @@ function destroyChart(instance) {
 }
 
 function getChartTextColor() {
-  return (
-    getComputedStyle(document.body).getPropertyValue("--text").trim() || "#EAE8FF"
-  );
+  return getComputedStyle(document.body).getPropertyValue("--text").trim() || "#EAE8FF";
 }
 
 function getChartGridColor() {
-  return (
-    getComputedStyle(document.body).getPropertyValue("--border").trim() || "#2A2A3C"
-  );
+  return getComputedStyle(document.body).getPropertyValue("--border").trim() || "#2A2A3C";
 }
 
 function createLineChart(canvas, labels, data, labelText) {
@@ -684,47 +667,12 @@ function renderCharts() {
   destroyChart(sprint150ChartInstance);
   destroyChart(sprint300ChartInstance);
 
-  deadliftChartInstance = createLineChart(
-    deadliftChartCanvas,
-    deadliftData.labels,
-    deadliftData.values,
-    "Deadlift Weight (kg)"
-  );
-
-  backSquatChartInstance = createLineChart(
-    backSquatChartCanvas,
-    squatData.labels,
-    squatData.values,
-    "Back Squat Weight (kg)"
-  );
-
-  jumpChartInstance = createLineChart(
-    jumpChartCanvas,
-    jumpData.labels,
-    jumpData.values,
-    "Total Jump Volume"
-  );
-
-  sprint200ChartInstance = createLineChart(
-    sprint200ChartCanvas,
-    sprint200Data.labels,
-    sprint200Data.values,
-    "200m Best Time (sec)"
-  );
-
-  sprint150ChartInstance = createLineChart(
-    sprint150ChartCanvas,
-    sprint150Data.labels,
-    sprint150Data.values,
-    "150m Best Time (sec)"
-  );
-
-  sprint300ChartInstance = createLineChart(
-    sprint300ChartCanvas,
-    sprint300Data.labels,
-    sprint300Data.values,
-    "300m Best Time (sec)"
-  );
+  deadliftChartInstance = createLineChart(deadliftChartCanvas, deadliftData.labels, deadliftData.values, "Deadlift Weight (kg)");
+  backSquatChartInstance = createLineChart(backSquatChartCanvas, squatData.labels, squatData.values, "Back Squat Weight (kg)");
+  jumpChartInstance = createLineChart(jumpChartCanvas, jumpData.labels, jumpData.values, "Total Jump Volume");
+  sprint200ChartInstance = createLineChart(sprint200ChartCanvas, sprint200Data.labels, sprint200Data.values, "200m Best Time (sec)");
+  sprint150ChartInstance = createLineChart(sprint150ChartCanvas, sprint150Data.labels, sprint150Data.values, "150m Best Time (sec)");
+  sprint300ChartInstance = createLineChart(sprint300ChartCanvas, sprint300Data.labels, sprint300Data.values, "300m Best Time (sec)");
 }
 
 function renderAll() {
@@ -735,10 +683,7 @@ function renderAll() {
 
 function callGoogleSheetsAction(params = {}) {
   return new Promise((resolve, reject) => {
-    const callbackName = `googleSheetsCallback_${Date.now()}_${Math.floor(
-      Math.random() * 100000
-    )}`;
-
+    const callbackName = `googleSheetsCallback_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
     const query = new URLSearchParams({
       callback: callbackName,
       ...params
@@ -822,7 +767,7 @@ async function deleteLog(index) {
   try {
     const url = `${GOOGLE_SCRIPT_URL}?action=delete&id=${encodeURIComponent(log.id)}`;
     await fetch(url);
-    await syncLogsFromGoogleSheets(false);
+    await delayedSync(false, 3, 1500);
   } catch (error) {
     console.error("Delete failed:", error);
     alert("Failed to delete session.");
@@ -836,7 +781,7 @@ async function clearLogs() {
   try {
     const url = `${GOOGLE_SCRIPT_URL}?action=clearAll`;
     await fetch(url);
-    await syncLogsFromGoogleSheets(false);
+    await delayedSync(false, 3, 1500);
   } catch (error) {
     console.error("Clear failed:", error);
     alert("Failed to clear logs.");
@@ -879,9 +824,7 @@ function importLogs(event) {
         return;
       }
 
-      const confirmed = confirm(
-        "This will upload all imported logs into Google Sheets. Continue?"
-      );
+      const confirmed = confirm("This will upload all imported logs into Google Sheets. Continue?");
       if (!confirmed) return;
 
       for (const log of importedLogs) {
@@ -892,7 +835,7 @@ function importLogs(event) {
         await saveLogToGoogleSheets(uploadLog);
       }
 
-      await syncLogsFromGoogleSheets(true);
+      await delayedSync(true, 3, 1500);
       importLogsInput.value = "";
     } catch (error) {
       console.error("Import failed:", error);
@@ -913,9 +856,7 @@ function loadTheme() {
 
 function toggleTheme() {
   document.body.classList.toggle("light");
-  const currentTheme = document.body.classList.contains("light")
-    ? "light"
-    : "dark";
+  const currentTheme = document.body.classList.contains("light") ? "light" : "dark";
   localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
   renderCharts();
 }
@@ -948,9 +889,7 @@ async function handleFormSubmit(event) {
   try {
     await saveLogToGoogleSheets(newLog);
     resetForm();
-    setTimeout(async () => {
-      await syncLogsFromGoogleSheets(false);
-    }, 1200);
+    await delayedSync(false, 3, 1500);
   } catch (error) {
     console.error("Failed to save to Google Sheets:", error);
     alert("Failed to save session to Google Sheets.");
