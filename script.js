@@ -32,6 +32,7 @@ const GOOGLE_SCRIPT_URL =
 const THEME_STORAGE_KEY = "theme";
 
 let currentLogs = [];
+let isSyncing = false;
 
 let deadliftChartInstance = null;
 let backSquatChartInstance = null;
@@ -725,7 +726,10 @@ async function loadLogsFromGoogleSheets() {
 }
 
 async function syncLogsFromGoogleSheets(showMessage = true) {
+  if (isSyncing) return;
+
   try {
+    isSyncing = true;
     const cloudLogs = await loadLogsFromGoogleSheets();
     setLogs(cloudLogs);
     renderAll();
@@ -738,6 +742,8 @@ async function syncLogsFromGoogleSheets(showMessage = true) {
     if (showMessage) {
       alert("Failed to sync logs from Google Sheets.");
     }
+  } finally {
+    isSyncing = false;
   }
 }
 
@@ -944,3 +950,9 @@ if (themeToggle) {
 }
 
 initApp();
+
+setInterval(() => {
+  if (!document.hidden) {
+    syncLogsFromGoogleSheets(false);
+  }
+}, 10000);
