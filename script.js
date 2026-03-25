@@ -31,6 +31,8 @@ const THEME_STORAGE_KEY = "theme";
 const GOOGLE_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbzZ0BuOnAM_L0Sxf36cld7PjwxWzWGWG44VvEV8t6TNmJ-ta6G8gJA13yBj_8JiLlXp/exec";
 
+let currentLogs = [];
+
 let deadliftChartInstance = null;
 let backSquatChartInstance = null;
 let jumpChartInstance = null;
@@ -90,12 +92,17 @@ tabButtons.forEach((button) => {
 });
 
 function getLogs() {
-  const savedLogs = localStorage.getItem(LOG_STORAGE_KEY);
-  return savedLogs ? JSON.parse(savedLogs) : [];
+  return Array.isArray(currentLogs) ? currentLogs : [];
 }
 
-function saveLogs(logs) {
-  localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(logs));
+function setLogs(logs) {
+  currentLogs = Array.isArray(logs) ? logs : [];
+  localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(currentLogs));
+}
+
+function loadLogsFromLocalStorage() {
+  const savedLogs = localStorage.getItem(LOG_STORAGE_KEY);
+  currentLogs = savedLogs ? JSON.parse(savedLogs) : [];
 }
 
 function createInputField({ label, type = "number", className, placeholder = "", value = "" }) {
@@ -725,10 +732,8 @@ function renderCharts() {
 function deleteLog(index) {
   const logs = getLogs();
   logs.splice(index, 1);
-  saveLogs(logs);
-  renderLogs();
-  renderHistory();
-  renderCharts();
+  setLogs(logs);
+  renderAll();
 }
 
 function exportLogs() {
@@ -768,16 +773,14 @@ function importLogs(event) {
       }
 
       const confirmed = confirm(
-        "This will replace your current logs. Continue?"
+        "This will replace your current local logs. Continue?"
       );
       if (!confirmed) return;
 
-      saveLogs(importedLogs);
-      renderLogs();
-      renderHistory();
-      renderCharts();
+      setLogs(importedLogs);
+      renderAll();
 
-      alert("Logs imported successfully.");
+      alert("Logs imported locally.");
       importLogsInput.value = "";
     } catch (error) {
       alert("Error importing file.");
@@ -799,14 +802,66 @@ async function saveLogToGoogleSheets(log) {
   });
 }
 
+function loadLogsFromGoogleSheets() {
+  return new Promise((resolve, reject) => {
+    const callbackName = `googleSheetsCallback_${Date.now()}_${Math.floor(
+      Math.random() * 100000
+    )}`;
+
+    window[callbackName] = (response) => {
+      try {
+        delete window[callbackName];
+        script.remove();
+
+        let logs = [];
+
+        if (Array.isArray(response)) {
+          logs = response;
+        } else if (response && Array.isArray(response.logs)) {
+          logs = response.logs;
+        } else if (response && response.success && Array.isArray(response.logs)) {
+          logs = response.logs;
+        }
+
+        resolve(logs);
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    const script = document.createElement("script");
+    script.src = `${GOOGLE_SCRIPT_URL}?action=getLogs&callback=${callbackName}`;
+    script.onerror = () => {
+      delete window[callbackName];
+      script.remove();
+      reject(new Error("Failed to load logs from Google Sheets"));
+    };
+
+    document.body.appendChild(script);
+  });
+}
+
+async function syncLogsFromGoogleSheets() {
+  try {
+    const cloudLogs = await loadLogsFromGoogleSheets();
+
+    if (Array.isArray(cloudLogs) && cloudLogs.length >= 0) {
+      setLogs(cloudLogs);
+      renderAll();
+    }
+  } catch (error) {
+    console.error("Failed to sync from Google Sheets:", error);
+  }
+}
+
 function clearLogs() {
-  const confirmed = confirm("Are you sure you want to clear all saved sessions?");
+  const confirmed = confirm(
+    "This clears only local logs in the browser. Logs already saved in Google Sheets will return on the next sync. Continue?"
+  );
   if (!confirmed) return;
 
-  localStorage.removeItem(LOG_STORAGE_KEY);
-  renderLogs();
-  renderHistory();
-  renderCharts();
+  setLogs([]);
+  renderAll();
 }
 
 function loadTheme() {
@@ -835,6 +890,12 @@ function resetForm() {
   renderExerciseFields(sessionTypeSelect.value);
 }
 
+function renderAll() {
+  renderLogs();
+  renderHistory();
+  renderCharts();
+}
+
 async function handleFormSubmit(event) {
   event.preventDefault();
 
@@ -851,19 +912,29 @@ async function handleFormSubmit(event) {
 
   const logs = getLogs();
   logs.push(newLog);
-  saveLogs(logs);
+  setLogs(logs);
+  renderAll();
+  resetForm();
 
   try {
     await saveLogToGoogleSheets(newLog);
+
+    setTimeout(() => {
+      syncLogsFromGoogleSheets();
+    }, 1500);
   } catch (error) {
     console.error("Failed to send to Google Sheets:", error);
     alert("Saved locally, but failed to send to Google Sheets.");
   }
+}
 
-  renderLogs();
-  renderHistory();
-  renderCharts();
+async function initApp() {
+  loadTheme();
+  loadLogsFromLocalStorage();
   resetForm();
+  renderExerciseFields("");
+  renderAll();
+  await syncLogsFromGoogleSheets();
 }
 
 if (sessionTypeSelect) {
@@ -898,9 +969,4 @@ if (themeToggle) {
   themeToggle.addEventListener("click", toggleTheme);
 }
 
-loadTheme();
-resetForm();
-renderExerciseFields("");
-renderLogs();
-renderHistory();
-renderCharts();
+initApp();
