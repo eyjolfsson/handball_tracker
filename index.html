@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Handball Tracker</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -188,12 +188,12 @@
 
             <div>
               <label for="rpe">RPE</label>
-              <input type="number" id="rpe" placeholder="RPE" min="1" max="20" />
+              <input type="number" id="rpe" min="1" max="10" placeholder="e.g. 8" />
             </div>
 
             <div>
               <label for="duration">Minutes</label>
-              <input type="number" id="duration" placeholder="Minutes" min="0" />
+              <input type="number" id="duration" min="0" placeholder="e.g. 60" />
             </div>
           </div>
 
@@ -204,22 +204,34 @@
                 <h4>Session Exercises</h4>
               </div>
             </div>
+
             <div id="exerciseFields"></div>
           </div>
 
           <div>
             <label for="notes">Notes</label>
-            <textarea id="notes" placeholder="Notes"></textarea>
+            <textarea
+              id="notes"
+              rows="4"
+              placeholder="How did the session feel? Any pain, strong lifts, sprint performance, jumps, energy levels, or progress?"
+            ></textarea>
           </div>
 
-          <button type="submit" class="btn">Save</button>
+          <button type="submit" class="btn">Save Session</button>
         </form>
 
         <div class="saved-log">
           <div class="saved-log-header">
             <h4>Saved Sessions</h4>
-            <button id="clearLogs" type="button" class="danger-btn">Clear All</button>
+
+            <div class="log-actions">
+              <button id="exportLogs" type="button" class="btn">Export Logs</button>
+              <button id="importLogsBtn" type="button" class="btn">Import Logs</button>
+              <button id="clearLogs" type="button" class="danger-btn">Clear All</button>
+            </div>
           </div>
+
+          <input type="file" id="importLogsInput" accept=".json" hidden />
           <div id="logList"></div>
         </div>
       </div>
@@ -241,6 +253,21 @@
           <div class="mini-card history-card">
             <h4>Jump History</h4>
             <div id="jumpHistory" class="history-list"></div>
+          </div>
+
+          <div class="mini-card history-card">
+            <h4>200m Sprint History</h4>
+            <div id="sprint200History" class="history-list"></div>
+          </div>
+
+          <div class="mini-card history-card">
+            <h4>150m Sprint History</h4>
+            <div id="sprint150History" class="history-list"></div>
+          </div>
+
+          <div class="mini-card history-card">
+            <h4>300m Sprint History</h4>
+            <div id="sprint300History" class="history-list"></div>
           </div>
         </div>
       </div>
@@ -269,6 +296,58 @@
               <canvas id="jumpChart"></canvas>
             </div>
           </div>
+
+          <div class="mini-card chart-card">
+            <h4>200m Best Time Over Time</h4>
+            <div class="chart-wrap">
+              <canvas id="sprint200Chart"></canvas>
+            </div>
+          </div>
+
+          <div class="mini-card chart-card">
+            <h4>150m Best Time Over Time</h4>
+            <div class="chart-wrap">
+              <canvas id="sprint150Chart"></canvas>
+            </div>
+          </div>
+
+          <div class="mini-card chart-card">
+            <h4>300m Best Time Over Time</h4>
+            <div class="chart-wrap">
+              <canvas id="sprint300Chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <div>
+          <p class="section-label">Recovery</p>
+          <h2>Recovery Checklist</h2>
+        </div>
+      </div>
+
+      <div class="recovery-grid">
+        <div class="mini-card">
+          <h4>Sleep</h4>
+          <p>Target 8–10+ hours for recovery and growth.</p>
+        </div>
+
+        <div class="mini-card">
+          <h4>Nutrition</h4>
+          <p>Eat balanced meals and hit protein consistently.</p>
+        </div>
+
+        <div class="mini-card">
+          <h4>Mobility</h4>
+          <p>Stay on top of ankles, hips, shoulders, and thoracic rotation.</p>
+        </div>
+
+        <div class="mini-card">
+          <h4>Stress</h4>
+          <p>Use breathing, walks, and recovery habits to stay fresh.</p>
         </div>
       </div>
     </section>

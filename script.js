@@ -3,6 +3,9 @@ const tabContents = document.querySelectorAll(".tab-content");
 const form = document.getElementById("progressForm");
 const logList = document.getElementById("logList");
 const clearLogsBtn = document.getElementById("clearLogs");
+const exportLogsBtn = document.getElementById("exportLogs");
+const importLogsBtn = document.getElementById("importLogsBtn");
+const importLogsInput = document.getElementById("importLogsInput");
 const themeToggle = document.getElementById("themeToggle");
 const dateInput = document.getElementById("date");
 const sessionTypeSelect = document.getElementById("sessionType");
@@ -12,17 +15,27 @@ const exerciseSection = document.getElementById("exerciseSection");
 const deadliftHistory = document.getElementById("deadliftHistory");
 const backSquatHistory = document.getElementById("backSquatHistory");
 const jumpHistory = document.getElementById("jumpHistory");
+const sprint200History = document.getElementById("sprint200History");
+const sprint150History = document.getElementById("sprint150History");
+const sprint300History = document.getElementById("sprint300History");
 
 const deadliftChartCanvas = document.getElementById("deadliftChart");
 const backSquatChartCanvas = document.getElementById("backSquatChart");
 const jumpChartCanvas = document.getElementById("jumpChart");
+const sprint200ChartCanvas = document.getElementById("sprint200Chart");
+const sprint150ChartCanvas = document.getElementById("sprint150Chart");
+const sprint300ChartCanvas = document.getElementById("sprint300Chart");
 
 const LOG_STORAGE_KEY = "handballLogs";
 const THEME_STORAGE_KEY = "theme";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzZ0BuOnAM_L0Sxf36cld7PjwxWzWGWG44VvEV8t6TNmJ-ta6G8gJA13yBj_8JiLlXp/exec";
 
 let deadliftChartInstance = null;
 let backSquatChartInstance = null;
 let jumpChartInstance = null;
+let sprint200ChartInstance = null;
+let sprint150ChartInstance = null;
+let sprint300ChartInstance = null;
 
 const workoutExercises = {
   "Workout A": [
@@ -94,31 +107,31 @@ function createInputField({ label, type = "number", className, placeholder = "",
 }
 
 function createExerciseCard(exercise, index) {
-  let fields = "";
+  let innerContent = "";
 
   if (exercise.type === "weight") {
-    fields = `
-      ${createInputField({ label: "Sets", className: "exercise-sets", placeholder: "e.g. 3" })}
-      ${createInputField({ label: "Reps", className: "exercise-reps", placeholder: "e.g. 10" })}
-      ${createInputField({ label: "Weight (kg)", className: "exercise-weight", placeholder: "e.g. 70" })}
+    innerContent = `
+      <div class="exercise-grid">
+        ${createInputField({ label: "Sets", className: "exercise-sets", placeholder: "e.g. 3" })}
+        ${createInputField({ label: "Reps", className: "exercise-reps", placeholder: "e.g. 10" })}
+        ${createInputField({ label: "Weight (kg)", className: "exercise-weight", placeholder: "e.g. 70" })}
+      </div>
     `;
   } else if (exercise.type === "jumps") {
-    fields = `
-      ${createInputField({ label: "Sets", className: "exercise-sets", placeholder: "e.g. 3" })}
-      ${createInputField({ label: "Jumps / Reps", className: "exercise-jumps", placeholder: "e.g. 15" })}
-      ${createInputField({ label: "Height / Note", type: "text", className: "exercise-extra", placeholder: "optional" })}
+    innerContent = `
+      <div class="exercise-grid">
+        ${createInputField({ label: "Sets", className: "exercise-sets", placeholder: "e.g. 3" })}
+        ${createInputField({ label: "Jumps / Reps", className: "exercise-jumps", placeholder: "e.g. 15" })}
+        ${createInputField({ label: "Height / Note", type: "text", className: "exercise-extra", placeholder: "optional" })}
+      </div>
     `;
   } else if (exercise.type === "reps") {
-    fields = `
-      ${createInputField({ label: "Sets", className: "exercise-sets", placeholder: "e.g. 3" })}
-      ${createInputField({ label: "Reps", className: "exercise-reps", placeholder: "e.g. 8" })}
-      ${createInputField({ label: "Load / Ball / Assist", type: "text", className: "exercise-extra", placeholder: "optional" })}
-    `;
-  } else if (exercise.type === "conditioning") {
-    fields = `
-      ${createInputField({ label: "Rounds", className: "exercise-rounds", placeholder: "e.g. 10" })}
-      ${createInputField({ label: "Work Time", type: "text", className: "exercise-work", placeholder: "e.g. 45 sec" })}
-      ${createInputField({ label: "Rest Time", type: "text", className: "exercise-rest", placeholder: "e.g. 60 sec" })}
+    innerContent = `
+      <div class="exercise-grid">
+        ${createInputField({ label: "Sets", className: "exercise-sets", placeholder: "e.g. 3" })}
+        ${createInputField({ label: "Reps", className: "exercise-reps", placeholder: "e.g. 8" })}
+        ${createInputField({ label: "Load / Ball / Assist", type: "text", className: "exercise-extra", placeholder: "optional" })}
+      </div>
     `;
   } else if (exercise.type === "sprint") {
     let sprintInputs = "";
@@ -131,29 +144,31 @@ function createExerciseCard(exercise, index) {
             type="number"
             step="0.01"
             class="exercise-sprint-time"
-            placeholder="e.g. 32.4"
+            placeholder="e.g. 32.40"
           />
         </div>
       `;
     }
 
-    fields = `
-      ${createInputField({
-        label: "Distance (m)",
-        className: "exercise-distance",
-        value: exercise.distance
-      })}
-      ${createInputField({
-        label: "Target Reps",
-        className: "exercise-target-reps",
-        value: exercise.reps
-      })}
-      ${createInputField({
-        label: "Rest",
-        type: "text",
-        className: "exercise-rest",
-        value: exercise.rest
-      })}
+    innerContent = `
+      <div class="exercise-grid">
+        ${createInputField({
+          label: "Distance (m)",
+          className: "exercise-distance",
+          value: exercise.distance
+        })}
+        ${createInputField({
+          label: "Target Reps",
+          className: "exercise-target-reps",
+          value: exercise.reps
+        })}
+        ${createInputField({
+          label: "Rest",
+          type: "text",
+          className: "exercise-rest",
+          value: exercise.rest
+        })}
+      </div>
       <div class="exercise-grid sprint-times-grid">
         ${sprintInputs}
       </div>
@@ -163,9 +178,7 @@ function createExerciseCard(exercise, index) {
   return `
     <div class="mini-card exercise-card" data-index="${index}" data-type="${exercise.type}">
       <h4>${exercise.name}</h4>
-      <div class="exercise-grid">
-        ${fields}
-      </div>
+      ${innerContent}
       <div class="exercise-note-wrap">
         <label>Exercise Note</label>
         <input type="text" class="exercise-note" placeholder="optional note" />
@@ -234,15 +247,6 @@ function collectExerciseData(sessionType) {
       };
     }
 
-    if (type === "conditioning") {
-      return {
-        ...baseData,
-        rounds: card.querySelector(".exercise-rounds")?.value || "",
-        work: card.querySelector(".exercise-work")?.value.trim() || "",
-        rest: card.querySelector(".exercise-rest")?.value.trim() || ""
-      };
-    }
-
     if (type === "sprint") {
       const sprintTimeInputs = card.querySelectorAll(".exercise-sprint-time");
       const times = Array.from(sprintTimeInputs)
@@ -251,7 +255,7 @@ function collectExerciseData(sessionType) {
 
       const bestTime = times.length ? Math.min(...times) : "";
       const averageTime = times.length
-        ? (times.reduce((sum, value) => sum + value, 0) / times.length).toFixed(2)
+        ? Number((times.reduce((sum, value) => sum + value, 0) / times.length).toFixed(2))
         : "";
 
       return {
@@ -306,19 +310,11 @@ function formatExerciseDetails(exercise) {
     `;
   }
 
-  if (exercise.type === "conditioning") {
-    return `
-      <li>
-        <strong>${exercise.name}:</strong>
-        Rounds ${exercise.rounds || "-"},
-        Work ${exercise.work || "-"},
-        Rest ${exercise.rest || "-"}
-        ${exercise.note ? `, Note: ${exercise.note}` : ""}
-      </li>
-    `;
-  }
-
   if (exercise.type === "sprint") {
+    const timesText = exercise.times && exercise.times.length
+      ? exercise.times.join(", ")
+      : "-";
+
     return `
       <li>
         <strong>${exercise.name}:</strong>
@@ -326,7 +322,8 @@ function formatExerciseDetails(exercise) {
         Target Reps ${exercise.targetReps || "-"},
         Best Time ${exercise.bestTime || "-"} sec,
         Average Time ${exercise.averageTime || "-"} sec,
-        Rest ${exercise.rest || "-"}
+        Rest ${exercise.rest || "-"},
+        Times [${timesText}]
         ${exercise.note ? `, Note: ${exercise.note}` : ""}
       </li>
     `;
@@ -424,6 +421,24 @@ function findJumpHistory() {
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
+function findSprintHistory(distance) {
+  const logs = getLogs();
+
+  return logs
+    .flatMap((log) => {
+      if (!log.exercises || !Array.isArray(log.exercises)) return [];
+
+      return log.exercises
+        .filter((exercise) => exercise.type === "sprint" && Number(exercise.distance) === distance)
+        .map((exercise) => ({
+          date: log.date,
+          sessionType: log.sessionType,
+          ...exercise
+        }));
+    })
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
 function renderHistoryList(container, items, formatter) {
   if (!container) return;
 
@@ -440,6 +455,9 @@ function renderHistory() {
   const deadliftItems = findExerciseHistory("Deadlift");
   const squatItems = findExerciseHistory("Back Squat");
   const jumpItems = findJumpHistory();
+  const sprint200Items = findSprintHistory(200);
+  const sprint150Items = findSprintHistory(150);
+  const sprint300Items = findSprintHistory(300);
 
   renderHistoryList(deadliftHistory, deadliftItems, (item) => `
     <div class="history-entry">
@@ -471,11 +489,40 @@ function renderHistory() {
       <p>${item.extra ? `Extra: ${item.extra}` : "Extra: -"}</p>
     </div>
   `);
+
+  renderHistoryList(sprint200History, sprint200Items, (item) => `
+    <div class="history-entry">
+      <p><strong>${item.date}</strong></p>
+      <p>Workout: ${item.sessionType}</p>
+      <p>Best Time: ${item.bestTime || "-"} sec</p>
+      <p>Average Time: ${item.averageTime || "-"} sec</p>
+      <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
+    </div>
+  `);
+
+  renderHistoryList(sprint150History, sprint150Items, (item) => `
+    <div class="history-entry">
+      <p><strong>${item.date}</strong></p>
+      <p>Workout: ${item.sessionType}</p>
+      <p>Best Time: ${item.bestTime || "-"} sec</p>
+      <p>Average Time: ${item.averageTime || "-"} sec</p>
+      <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
+    </div>
+  `);
+
+  renderHistoryList(sprint300History, sprint300Items, (item) => `
+    <div class="history-entry">
+      <p><strong>${item.date}</strong></p>
+      <p>Workout: ${item.sessionType}</p>
+      <p>Best Time: ${item.bestTime || "-"} sec</p>
+      <p>Average Time: ${item.averageTime || "-"} sec</p>
+      <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
+    </div>
+  `);
 }
 
 function buildDeadliftChartData() {
   const items = findExerciseHistory("Deadlift");
-
   return {
     labels: items.map((item) => item.date),
     values: items.map((item) => Number(item.weight) || 0)
@@ -484,7 +531,6 @@ function buildDeadliftChartData() {
 
 function buildBackSquatChartData() {
   const items = findExerciseHistory("Back Squat");
-
   return {
     labels: items.map((item) => item.date),
     values: items.map((item) => Number(item.weight) || 0)
@@ -510,6 +556,14 @@ function buildJumpChartData() {
   const values = labels.map((label) => grouped[label]);
 
   return { labels, values };
+}
+
+function buildSprintChartData(distance) {
+  const items = findSprintHistory(distance);
+  return {
+    labels: items.map((item) => item.date),
+    values: items.map((item) => Number(item.bestTime) || 0)
+  };
 }
 
 function destroyChart(instance) {
@@ -583,10 +637,16 @@ function renderCharts() {
   const deadliftData = buildDeadliftChartData();
   const squatData = buildBackSquatChartData();
   const jumpData = buildJumpChartData();
+  const sprint200Data = buildSprintChartData(200);
+  const sprint150Data = buildSprintChartData(150);
+  const sprint300Data = buildSprintChartData(300);
 
   destroyChart(deadliftChartInstance);
   destroyChart(backSquatChartInstance);
   destroyChart(jumpChartInstance);
+  destroyChart(sprint200ChartInstance);
+  destroyChart(sprint150ChartInstance);
+  destroyChart(sprint300ChartInstance);
 
   deadliftChartInstance = createLineChart(
     deadliftChartCanvas,
@@ -608,39 +668,109 @@ function renderCharts() {
     jumpData.values,
     "Total Jump Volume"
   );
+
+  sprint200ChartInstance = createLineChart(
+    sprint200ChartCanvas,
+    sprint200Data.labels,
+    sprint200Data.values,
+    "200m Best Time (sec)"
+  );
+
+  sprint150ChartInstance = createLineChart(
+    sprint150ChartCanvas,
+    sprint150Data.labels,
+    sprint150Data.values,
+    "150m Best Time (sec)"
+  );
+
+  sprint300ChartInstance = createLineChart(
+    sprint300ChartCanvas,
+    sprint300Data.labels,
+    sprint300Data.values,
+    "300m Best Time (sec)"
+  );
 }
 
-function resetForm() {
-  form.reset();
-
-  if (dateInput) {
-    dateInput.valueAsDate = new Date();
-  }
-
-  renderExerciseFields(sessionTypeSelect.value);
-}
-
-function handleFormSubmit(event) {
-  event.preventDefault();
-
-  const sessionType = sessionTypeSelect.value;
-
-  const newLog = {
-    date: document.getElementById("date").value,
-    sessionType,
-    rpe: document.getElementById("rpe").value,
-    duration: document.getElementById("duration").value,
-    notes: document.getElementById("notes").value.trim(),
-    exercises: collectExerciseData(sessionType)
-  };
-
+function deleteLog(index) {
   const logs = getLogs();
-  logs.push(newLog);
+  logs.splice(index, 1);
   saveLogs(logs);
   renderLogs();
   renderHistory();
   renderCharts();
-  resetForm();
+}
+
+function exportLogs() {
+  const logs = getLogs();
+
+  if (!logs.length) {
+    alert("No logs to export.");
+    return;
+  }
+
+  const jsonString = JSON.stringify(logs, null, 2);
+  const blob = new Blob([jsonString], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `handball_logs_${new Date().toISOString().split("T")[0]}.json`;
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function importLogs(event) {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function (loadEvent) {
+    try {
+      const importedLogs = JSON.parse(loadEvent.target.result);
+
+      if (!Array.isArray(importedLogs)) {
+        alert("Invalid file format.");
+        return;
+      }
+
+      const confirmed = confirm("This will replace your current logs. Continue?");
+      if (!confirmed) return;
+
+      saveLogs(importedLogs);
+      renderLogs();
+      renderHistory();
+      renderCharts();
+
+      alert("Logs imported successfully.");
+      importLogsInput.value = "";
+    } catch (error) {
+      alert("Error importing file.");
+      importLogsInput.value = "";
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+async function saveLogToGoogleSheets(log) {
+  const response = await fetch(GOOGLE_SCRIPT_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"
+    },
+    body: JSON.stringify(log)
+  });
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || "Unknown Google Sheets error");
+  }
+
+  return result;
 }
 
 function clearLogs() {
@@ -648,15 +778,6 @@ function clearLogs() {
   if (!confirmed) return;
 
   localStorage.removeItem(LOG_STORAGE_KEY);
-  renderLogs();
-  renderHistory();
-  renderCharts();
-}
-
-function deleteLog(index) {
-  const logs = getLogs();
-  logs.splice(index, 1);
-  saveLogs(logs);
   renderLogs();
   renderHistory();
   renderCharts();
@@ -676,6 +797,47 @@ function toggleTheme() {
   renderCharts();
 }
 
+function resetForm() {
+  form.reset();
+
+  if (dateInput) {
+    dateInput.valueAsDate = new Date();
+  }
+
+  renderExerciseFields(sessionTypeSelect.value);
+}
+
+async function handleFormSubmit(event) {
+  event.preventDefault();
+
+  const sessionType = sessionTypeSelect.value;
+
+  const newLog = {
+    date: document.getElementById("date").value,
+    sessionType,
+    rpe: document.getElementById("rpe").value,
+    duration: document.getElementById("duration").value,
+    notes: document.getElementById("notes").value.trim(),
+    exercises: collectExerciseData(sessionType)
+  };
+
+  const logs = getLogs();
+  logs.push(newLog);
+  saveLogs(logs);
+
+  try {
+    await saveLogToGoogleSheets(newLog);
+  } catch (error) {
+    console.error("Failed to save to Google Sheets:", error);
+    alert("Saved locally, but failed to save to Google Sheets.");
+  }
+
+  renderLogs();
+  renderHistory();
+  renderCharts();
+  resetForm();
+}
+
 if (sessionTypeSelect) {
   sessionTypeSelect.addEventListener("change", () => {
     renderExerciseFields(sessionTypeSelect.value);
@@ -690,12 +852,27 @@ if (clearLogsBtn) {
   clearLogsBtn.addEventListener("click", clearLogs);
 }
 
+if (exportLogsBtn) {
+  exportLogsBtn.addEventListener("click", exportLogs);
+}
+
+if (importLogsBtn) {
+  importLogsBtn.addEventListener("click", () => {
+    importLogsInput.click();
+  });
+}
+
+if (importLogsInput) {
+  importLogsInput.addEventListener("change", importLogs);
+}
+
 if (themeToggle) {
   themeToggle.addEventListener("click", toggleTheme);
 }
 
 loadTheme();
 resetForm();
+renderExerciseFields("");
 renderLogs();
 renderHistory();
 renderCharts();
