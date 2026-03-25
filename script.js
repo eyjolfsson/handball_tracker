@@ -29,7 +29,6 @@ const sprint300ChartCanvas = document.getElementById("sprint300Chart");
 
 const GOOGLE_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbzZ0BuOnAM_L0Sxf36cld7PjwxWzWGWG44VvEV8t6TNmJ-ta6G8gJA13yBj_8JiLlXp/exec";
-
 const THEME_STORAGE_KEY = "theme";
 
 let currentLogs = [];
@@ -734,89 +733,6 @@ function renderAll() {
   renderCharts();
 }
 
-function exportLogs() {
-  const logs = getLogs();
-
-  if (!logs.length) {
-    alert("No logs to export.");
-    return;
-  }
-
-  const jsonString = JSON.stringify(logs, null, 2);
-  const blob = new Blob([jsonString], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `handball_logs_${new Date().toISOString().split("T")[0]}.json`;
-  link.click();
-
-  URL.revokeObjectURL(url);
-}
-
-async function importSingleLogToGoogleSheets(log) {
-  await fetch(GOOGLE_SCRIPT_URL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"
-    },
-    body: JSON.stringify(log)
-  });
-}
-
-function importLogs(event) {
-  const file = event.target.files[0];
-
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = async function (loadEvent) {
-    try {
-      const importedLogs = JSON.parse(loadEvent.target.result);
-
-      if (!Array.isArray(importedLogs)) {
-        alert("Invalid file format.");
-        return;
-      }
-
-      const confirmed = confirm(
-        "This will upload all imported logs into Google Sheets. Continue?"
-      );
-      if (!confirmed) return;
-
-      for (const log of importedLogs) {
-        const uploadLog = {
-          ...log,
-          id: log.id || generateLogId()
-        };
-        await importSingleLogToGoogleSheets(uploadLog);
-      }
-
-      await syncLogsFromGoogleSheets(true);
-      importLogsInput.value = "";
-    } catch (error) {
-      console.error("Import failed:", error);
-      alert("Error importing file.");
-      importLogsInput.value = "";
-    }
-  };
-
-  reader.readAsText(file);
-}
-
-async function saveLogToGoogleSheets(log) {
-  await fetch(GOOGLE_SCRIPT_URL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"
-    },
-    body: JSON.stringify(log)
-  });
-}
-
 function callGoogleSheetsAction(params = {}) {
   return new Promise((resolve, reject) => {
     const callbackName = `googleSheetsCallback_${Date.now()}_${Math.floor(
@@ -863,19 +779,6 @@ async function loadLogsFromGoogleSheets() {
   return Array.isArray(response) ? response : [];
 }
 
-async function deleteLogFromGoogleSheets(id) {
-  return callGoogleSheetsAction({
-    action: "delete",
-    id
-  });
-}
-
-async function clearAllLogsFromGoogleSheets() {
-  return callGoogleSheetsAction({
-    action: "clearAll"
-  });
-}
-
 async function syncLogsFromGoogleSheets(showMessage = true) {
   try {
     const cloudLogs = await loadLogsFromGoogleSheets();
@@ -893,40 +796,112 @@ async function syncLogsFromGoogleSheets(showMessage = true) {
   }
 }
 
+async function saveLogToGoogleSheets(log) {
+  await fetch(GOOGLE_SCRIPT_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"
+    },
+    body: JSON.stringify(log)
+  });
+}
+
 async function deleteLog(index) {
   const logs = getLogs();
   const log = logs[index];
 
   if (!log || !log.id) {
-    alert("Missing log ID. Cannot delete from Google Sheets.");
+    alert("Missing log ID.");
     return;
   }
 
-  const confirmed = confirm("Delete this session from Google Sheets?");
+  const confirmed = confirm("Delete this session?");
   if (!confirmed) return;
 
   try {
-    await deleteLogFromGoogleSheets(log.id);
+    const url = `${GOOGLE_SCRIPT_URL}?action=delete&id=${encodeURIComponent(log.id)}`;
+    await fetch(url);
     await syncLogsFromGoogleSheets(false);
   } catch (error) {
     console.error("Delete failed:", error);
-    alert("Failed to delete session from Google Sheets.");
+    alert("Failed to delete session.");
   }
 }
 
 async function clearLogs() {
-  const confirmed = confirm(
-    "This will permanently delete ALL sessions from Google Sheets. Continue?"
-  );
+  const confirmed = confirm("Delete ALL sessions from Google Sheets?");
   if (!confirmed) return;
 
   try {
-    await clearAllLogsFromGoogleSheets();
+    const url = `${GOOGLE_SCRIPT_URL}?action=clearAll`;
+    await fetch(url);
     await syncLogsFromGoogleSheets(false);
   } catch (error) {
-    console.error("Clear all failed:", error);
-    alert("Failed to clear Google Sheets.");
+    console.error("Clear failed:", error);
+    alert("Failed to clear logs.");
   }
+}
+
+function exportLogs() {
+  const logs = getLogs();
+
+  if (!logs.length) {
+    alert("No logs to export.");
+    return;
+  }
+
+  const jsonString = JSON.stringify(logs, null, 2);
+  const blob = new Blob([jsonString], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `handball_logs_${new Date().toISOString().split("T")[0]}.json`;
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function importLogs(event) {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = async function (loadEvent) {
+    try {
+      const importedLogs = JSON.parse(loadEvent.target.result);
+
+      if (!Array.isArray(importedLogs)) {
+        alert("Invalid file format.");
+        return;
+      }
+
+      const confirmed = confirm(
+        "This will upload all imported logs into Google Sheets. Continue?"
+      );
+      if (!confirmed) return;
+
+      for (const log of importedLogs) {
+        const uploadLog = {
+          ...log,
+          id: log.id || generateLogId()
+        };
+        await saveLogToGoogleSheets(uploadLog);
+      }
+
+      await syncLogsFromGoogleSheets(true);
+      importLogsInput.value = "";
+    } catch (error) {
+      console.error("Import failed:", error);
+      alert("Error importing file.");
+      importLogsInput.value = "";
+    }
+  };
+
+  reader.readAsText(file);
 }
 
 function loadTheme() {
@@ -972,10 +947,10 @@ async function handleFormSubmit(event) {
 
   try {
     await saveLogToGoogleSheets(newLog);
+    resetForm();
     setTimeout(async () => {
       await syncLogsFromGoogleSheets(false);
     }, 1200);
-    resetForm();
   } catch (error) {
     console.error("Failed to save to Google Sheets:", error);
     alert("Failed to save session to Google Sheets.");
