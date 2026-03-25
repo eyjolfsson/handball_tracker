@@ -33,6 +33,7 @@ const THEME_STORAGE_KEY = "theme";
 
 let currentLogs = [];
 let isSyncing = false;
+let isBusy = false;
 
 let deadliftChartInstance = null;
 let backSquatChartInstance = null;
@@ -108,10 +109,97 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function delayedSync(showMessage = false, attempts = 3, delay = 1500) {
+async function delayedSync(showMessage = false, attempts = 3, delay = 1200) {
   for (let i = 0; i < attempts; i += 1) {
     await sleep(delay);
     await syncLogsFromGoogleSheets(showMessage && i === attempts - 1);
+  }
+}
+
+function formatDisplayDate(dateValue) {
+  if (!dateValue) return "-";
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return String(dateValue);
+
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+}
+
+function showStatus(message, type = "info") {
+  let statusEl = document.getElementById("appStatus");
+
+  if (!statusEl) {
+    statusEl = document.createElement("div");
+    statusEl.id = "appStatus";
+    statusEl.style.margin = "12px 0 16px";
+    statusEl.style.padding = "10px 14px";
+    statusEl.style.borderRadius = "10px";
+    statusEl.style.fontWeight = "600";
+    statusEl.style.fontSize = "0.95rem";
+    statusEl.style.border = "1px solid var(--border)";
+    statusEl.style.background = "var(--shade-1)";
+    statusEl.style.color = "var(--text)";
+
+    const savedLogSection = document.querySelector(".saved-log");
+    if (savedLogSection) {
+      savedLogSection.insertBefore(statusEl, savedLogSection.firstChild);
+    }
+  }
+
+  statusEl.textContent = message;
+
+  if (type === "success") {
+    statusEl.style.borderColor = "rgba(27, 231, 255, 0.45)";
+  } else if (type === "error") {
+    statusEl.style.borderColor = "rgba(244, 68, 46, 0.45)";
+  } else {
+    statusEl.style.borderColor = "var(--border)";
+  }
+}
+
+function clearStatus() {
+  const statusEl = document.getElementById("appStatus");
+  if (statusEl) {
+    statusEl.textContent = "";
+    statusEl.style.borderColor = "var(--border)";
+  }
+}
+
+function setButtonsDisabled(disabled) {
+  const buttons = [
+    clearLogsBtn,
+    exportLogsBtn,
+    importLogsBtn,
+    syncLogsBtn,
+    themeToggle,
+    form?.querySelector('button[type="submit"]')
+  ];
+
+  buttons.forEach((button) => {
+    if (button) {
+      button.disabled = disabled;
+      button.style.opacity = disabled ? "0.65" : "1";
+      button.style.pointerEvents = disabled ? "none" : "auto";
+    }
+  });
+}
+
+async function withBusyState(message, task) {
+  if (isBusy) return;
+  isBusy = true;
+  setButtonsDisabled(true);
+  showStatus(message, "info");
+
+  try {
+    const result = await task();
+    return result;
+  } finally {
+    isBusy = false;
+    setButtonsDisabled(false);
   }
 }
 
@@ -366,7 +454,7 @@ function createLogItem(log, reversedIndex, totalLogs) {
     : "";
 
   logItem.innerHTML = `
-    <p><strong>Date:</strong> ${log.date}</p>
+    <p><strong>Date:</strong> ${formatDisplayDate(log.date)}</p>
     <p><strong>Session:</strong> ${log.sessionType}</p>
     <p><strong>RPE:</strong> ${log.rpe || "-"}</p>
     <p><strong>Duration:</strong> ${log.duration ? `${log.duration} min` : "-"}</p>
@@ -481,7 +569,7 @@ function renderHistory() {
 
   renderHistoryList(deadliftHistory, deadliftItems, (item) => `
     <div class="history-entry">
-      <p><strong>${item.date}</strong></p>
+      <p><strong>${formatDisplayDate(item.date)}</strong></p>
       <p>Workout: ${item.sessionType}</p>
       <p>Sets: ${item.sets || "-"}</p>
       <p>Reps: ${item.reps || "-"}</p>
@@ -491,7 +579,7 @@ function renderHistory() {
 
   renderHistoryList(backSquatHistory, squatItems, (item) => `
     <div class="history-entry">
-      <p><strong>${item.date}</strong></p>
+      <p><strong>${formatDisplayDate(item.date)}</strong></p>
       <p>Workout: ${item.sessionType}</p>
       <p>Sets: ${item.sets || "-"}</p>
       <p>Reps: ${item.reps || "-"}</p>
@@ -501,7 +589,7 @@ function renderHistory() {
 
   renderHistoryList(jumpHistory, jumpItems, (item) => `
     <div class="history-entry">
-      <p><strong>${item.date}</strong></p>
+      <p><strong>${formatDisplayDate(item.date)}</strong></p>
       <p>Exercise: ${item.name}</p>
       <p>Workout: ${item.sessionType}</p>
       <p>Sets: ${item.sets || "-"}</p>
@@ -512,7 +600,7 @@ function renderHistory() {
 
   renderHistoryList(sprint200History, sprint200Items, (item) => `
     <div class="history-entry">
-      <p><strong>${item.date}</strong></p>
+      <p><strong>${formatDisplayDate(item.date)}</strong></p>
       <p>Workout: ${item.sessionType}</p>
       <p>Best Time: ${item.bestTime || "-"} sec</p>
       <p>Average Time: ${item.averageTime || "-"} sec</p>
@@ -522,7 +610,7 @@ function renderHistory() {
 
   renderHistoryList(sprint150History, sprint150Items, (item) => `
     <div class="history-entry">
-      <p><strong>${item.date}</strong></p>
+      <p><strong>${formatDisplayDate(item.date)}</strong></p>
       <p>Workout: ${item.sessionType}</p>
       <p>Best Time: ${item.bestTime || "-"} sec</p>
       <p>Average Time: ${item.averageTime || "-"} sec</p>
@@ -532,7 +620,7 @@ function renderHistory() {
 
   renderHistoryList(sprint300History, sprint300Items, (item) => `
     <div class="history-entry">
-      <p><strong>${item.date}</strong></p>
+      <p><strong>${formatDisplayDate(item.date)}</strong></p>
       <p>Workout: ${item.sessionType}</p>
       <p>Best Time: ${item.bestTime || "-"} sec</p>
       <p>Average Time: ${item.averageTime || "-"} sec</p>
@@ -544,7 +632,7 @@ function renderHistory() {
 function buildDeadliftChartData() {
   const items = findExerciseHistory("Deadlift");
   return {
-    labels: items.map((item) => item.date),
+    labels: items.map((item) => formatDisplayDate(item.date)),
     values: items.map((item) => Number(item.weight) || 0)
   };
 }
@@ -552,7 +640,7 @@ function buildDeadliftChartData() {
 function buildBackSquatChartData() {
   const items = findExerciseHistory("Back Squat");
   return {
-    labels: items.map((item) => item.date),
+    labels: items.map((item) => formatDisplayDate(item.date)),
     values: items.map((item) => Number(item.weight) || 0)
   };
 }
@@ -562,7 +650,7 @@ function buildJumpChartData() {
   const grouped = {};
 
   items.forEach((item) => {
-    const date = item.date;
+    const date = formatDisplayDate(item.date);
     const jumps = Number(item.jumps) || 0;
 
     if (!grouped[date]) {
@@ -572,7 +660,7 @@ function buildJumpChartData() {
     grouped[date] += jumps;
   });
 
-  const labels = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
+  const labels = Object.keys(grouped);
   const values = labels.map((label) => grouped[label]);
 
   return { labels, values };
@@ -581,7 +669,7 @@ function buildJumpChartData() {
 function buildSprintChartData(distance) {
   const items = findSprintHistory(distance);
   return {
-    labels: items.map((item) => item.date),
+    labels: items.map((item) => formatDisplayDate(item.date)),
     values: items.map((item) => Number(item.bestTime) || 0)
   };
 }
@@ -735,12 +823,12 @@ async function syncLogsFromGoogleSheets(showMessage = true) {
     renderAll();
 
     if (showMessage) {
-      alert("Logs synced from Google Sheets.");
+      showStatus("Logs synced from Google Sheets.", "success");
     }
   } catch (error) {
     console.error("Sync failed:", error);
     if (showMessage) {
-      alert("Failed to sync logs from Google Sheets.");
+      showStatus("Failed to sync logs from Google Sheets.", "error");
     }
   } finally {
     isSyncing = false;
@@ -763,42 +851,48 @@ async function deleteLog(index) {
   const log = logs[index];
 
   if (!log || !log.id) {
-    alert("Missing log ID.");
+    showStatus("Missing log ID.", "error");
     return;
   }
 
   const confirmed = confirm("Delete this session?");
   if (!confirmed) return;
 
-  try {
-    const url = `${GOOGLE_SCRIPT_URL}?action=delete&id=${encodeURIComponent(log.id)}`;
-    await fetch(url);
-    await delayedSync(false, 3, 1500);
-  } catch (error) {
-    console.error("Delete failed:", error);
-    alert("Failed to delete session.");
-  }
+  await withBusyState("Deleting session...", async () => {
+    try {
+      const url = `${GOOGLE_SCRIPT_URL}?action=delete&id=${encodeURIComponent(log.id)}`;
+      await fetch(url);
+      await delayedSync(false, 3, 1200);
+      showStatus("Session deleted.", "success");
+    } catch (error) {
+      console.error("Delete failed:", error);
+      showStatus("Failed to delete session.", "error");
+    }
+  });
 }
 
 async function clearLogs() {
   const confirmed = confirm("Delete ALL sessions from Google Sheets?");
   if (!confirmed) return;
 
-  try {
-    const url = `${GOOGLE_SCRIPT_URL}?action=clearAll`;
-    await fetch(url);
-    await delayedSync(false, 3, 1500);
-  } catch (error) {
-    console.error("Clear failed:", error);
-    alert("Failed to clear logs.");
-  }
+  await withBusyState("Clearing all sessions...", async () => {
+    try {
+      const url = `${GOOGLE_SCRIPT_URL}?action=clearAll`;
+      await fetch(url);
+      await delayedSync(false, 3, 1200);
+      showStatus("All sessions cleared.", "success");
+    } catch (error) {
+      console.error("Clear failed:", error);
+      showStatus("Failed to clear logs.", "error");
+    }
+  });
 }
 
 function exportLogs() {
   const logs = getLogs();
 
   if (!logs.length) {
-    alert("No logs to export.");
+    showStatus("No logs to export.", "error");
     return;
   }
 
@@ -812,6 +906,7 @@ function exportLogs() {
   link.click();
 
   URL.revokeObjectURL(url);
+  showStatus("Logs exported.", "success");
 }
 
 function importLogs(event) {
@@ -822,32 +917,35 @@ function importLogs(event) {
   const reader = new FileReader();
 
   reader.onload = async function (loadEvent) {
-    try {
-      const importedLogs = JSON.parse(loadEvent.target.result);
+    await withBusyState("Importing logs...", async () => {
+      try {
+        const importedLogs = JSON.parse(loadEvent.target.result);
 
-      if (!Array.isArray(importedLogs)) {
-        alert("Invalid file format.");
-        return;
+        if (!Array.isArray(importedLogs)) {
+          showStatus("Invalid file format.", "error");
+          return;
+        }
+
+        const confirmed = confirm("This will upload all imported logs into Google Sheets. Continue?");
+        if (!confirmed) return;
+
+        for (const log of importedLogs) {
+          const uploadLog = {
+            ...log,
+            id: log.id || generateLogId()
+          };
+          await saveLogToGoogleSheets(uploadLog);
+        }
+
+        await delayedSync(false, 3, 1200);
+        importLogsInput.value = "";
+        showStatus("Logs imported successfully.", "success");
+      } catch (error) {
+        console.error("Import failed:", error);
+        showStatus("Error importing file.", "error");
+        importLogsInput.value = "";
       }
-
-      const confirmed = confirm("This will upload all imported logs into Google Sheets. Continue?");
-      if (!confirmed) return;
-
-      for (const log of importedLogs) {
-        const uploadLog = {
-          ...log,
-          id: log.id || generateLogId()
-        };
-        await saveLogToGoogleSheets(uploadLog);
-      }
-
-      await delayedSync(true, 3, 1500);
-      importLogsInput.value = "";
-    } catch (error) {
-      console.error("Import failed:", error);
-      alert("Error importing file.");
-      importLogsInput.value = "";
-    }
+    });
   };
 
   reader.readAsText(file);
@@ -892,14 +990,17 @@ async function handleFormSubmit(event) {
     exercises: collectExerciseData(sessionType)
   };
 
-  try {
-    await saveLogToGoogleSheets(newLog);
-    resetForm();
-    await delayedSync(false, 3, 1500);
-  } catch (error) {
-    console.error("Failed to save to Google Sheets:", error);
-    alert("Failed to save session to Google Sheets.");
-  }
+  await withBusyState("Saving session...", async () => {
+    try {
+      await saveLogToGoogleSheets(newLog);
+      resetForm();
+      await delayedSync(false, 3, 1200);
+      showStatus("Session saved.", "success");
+    } catch (error) {
+      console.error("Failed to save to Google Sheets:", error);
+      showStatus("Failed to save session.", "error");
+    }
+  });
 }
 
 async function initApp() {
@@ -908,7 +1009,9 @@ async function initApp() {
   renderExerciseFields("");
   setLogs([]);
   renderAll();
+  showStatus("Loading sessions...", "info");
   await syncLogsFromGoogleSheets(false);
+  clearStatus();
 }
 
 if (sessionTypeSelect) {
@@ -940,8 +1043,11 @@ if (importLogsInput) {
 }
 
 if (syncLogsBtn) {
-  syncLogsBtn.addEventListener("click", () => {
-    syncLogsFromGoogleSheets(true);
+  syncLogsBtn.addEventListener("click", async () => {
+    await withBusyState("Syncing logs...", async () => {
+      await syncLogsFromGoogleSheets(false);
+      showStatus("Logs synced from Google Sheets.", "success");
+    });
   });
 }
 
