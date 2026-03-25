@@ -6,6 +6,7 @@ const clearLogsBtn = document.getElementById("clearLogs");
 const exportLogsBtn = document.getElementById("exportLogs");
 const importLogsBtn = document.getElementById("importLogsBtn");
 const importLogsInput = document.getElementById("importLogsInput");
+const syncLogsBtn = document.getElementById("syncLogs");
 const themeToggle = document.getElementById("themeToggle");
 const dateInput = document.getElementById("date");
 const sessionTypeSelect = document.getElementById("sessionType");
@@ -729,6 +730,12 @@ function renderCharts() {
   );
 }
 
+function renderAll() {
+  renderLogs();
+  renderHistory();
+  renderCharts();
+}
+
 function deleteLog(index) {
   const logs = getLogs();
   logs.splice(index, 1);
@@ -808,29 +815,26 @@ function loadLogsFromGoogleSheets() {
       Math.random() * 100000
     )}`;
 
+    const script = document.createElement("script");
+
     window[callbackName] = (response) => {
       try {
         delete window[callbackName];
         script.remove();
 
-        let logs = [];
-
-        if (Array.isArray(response)) {
-          logs = response;
-        } else if (response && Array.isArray(response.logs)) {
-          logs = response.logs;
-        } else if (response && response.success && Array.isArray(response.logs)) {
-          logs = response.logs;
+        if (response && response.success === false) {
+          reject(new Error(response.error || "Google Sheets sync failed"));
+          return;
         }
 
-        resolve(logs);
+        resolve(Array.isArray(response) ? response : []);
       } catch (error) {
         reject(error);
       }
     };
 
-    const script = document.createElement("script");
-    script.src = `${GOOGLE_SCRIPT_URL}?action=getLogs&callback=${callbackName}`;
+    script.src = `${GOOGLE_SCRIPT_URL}?callback=${callbackName}&t=${Date.now()}`;
+
     script.onerror = () => {
       delete window[callbackName];
       script.remove();
@@ -841,16 +845,20 @@ function loadLogsFromGoogleSheets() {
   });
 }
 
-async function syncLogsFromGoogleSheets() {
+async function syncLogsFromGoogleSheets(showMessage = true) {
   try {
     const cloudLogs = await loadLogsFromGoogleSheets();
+    setLogs(cloudLogs);
+    renderAll();
 
-    if (Array.isArray(cloudLogs) && cloudLogs.length >= 0) {
-      setLogs(cloudLogs);
-      renderAll();
+    if (showMessage) {
+      alert("Logs synced from Google Sheets.");
     }
   } catch (error) {
-    console.error("Failed to sync from Google Sheets:", error);
+    console.error("Sync failed:", error);
+    if (showMessage) {
+      alert("Failed to sync logs from Google Sheets.");
+    }
   }
 }
 
@@ -890,12 +898,6 @@ function resetForm() {
   renderExerciseFields(sessionTypeSelect.value);
 }
 
-function renderAll() {
-  renderLogs();
-  renderHistory();
-  renderCharts();
-}
-
 async function handleFormSubmit(event) {
   event.preventDefault();
 
@@ -920,11 +922,11 @@ async function handleFormSubmit(event) {
     await saveLogToGoogleSheets(newLog);
 
     setTimeout(() => {
-      syncLogsFromGoogleSheets();
+      syncLogsFromGoogleSheets(false);
     }, 1500);
   } catch (error) {
     console.error("Failed to send to Google Sheets:", error);
-    alert("Saved locally, but failed to send to Google Sheets.");
+    alert("Saved locally, but failed to save to Google Sheets.");
   }
 }
 
@@ -934,7 +936,7 @@ async function initApp() {
   resetForm();
   renderExerciseFields("");
   renderAll();
-  await syncLogsFromGoogleSheets();
+  await syncLogsFromGoogleSheets(false);
 }
 
 if (sessionTypeSelect) {
@@ -963,6 +965,12 @@ if (importLogsBtn) {
 
 if (importLogsInput) {
   importLogsInput.addEventListener("change", importLogs);
+}
+
+if (syncLogsBtn) {
+  syncLogsBtn.addEventListener("click", () => {
+    syncLogsFromGoogleSheets(true);
+  });
 }
 
 if (themeToggle) {
