@@ -28,7 +28,8 @@ const sprint300ChartCanvas = document.getElementById("sprint300Chart");
 
 const LOG_STORAGE_KEY = "handballLogs";
 const THEME_STORAGE_KEY = "theme";
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzZ0BuOnAM_L0Sxf36cld7PjwxWzWGWG44VvEV8t6TNmJ-ta6G8gJA13yBj_8JiLlXp/exec";
+const GOOGLE_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbzZ0BuOnAM_L0Sxf36cld7PjwxWzWGWG44VvEV8t6TNmJ-ta6G8gJA13yBj_8JiLlXp/exec";
 
 let deadliftChartInstance = null;
 let backSquatChartInstance = null;
@@ -311,9 +312,8 @@ function formatExerciseDetails(exercise) {
   }
 
   if (exercise.type === "sprint") {
-    const timesText = exercise.times && exercise.times.length
-      ? exercise.times.join(", ")
-      : "-";
+    const timesText =
+      exercise.times && exercise.times.length ? exercise.times.join(", ") : "-";
 
     return `
       <li>
@@ -429,7 +429,10 @@ function findSprintHistory(distance) {
       if (!log.exercises || !Array.isArray(log.exercises)) return [];
 
       return log.exercises
-        .filter((exercise) => exercise.type === "sprint" && Number(exercise.distance) === distance)
+        .filter(
+          (exercise) =>
+            exercise.type === "sprint" && Number(exercise.distance) === distance
+        )
         .map((exercise) => ({
           date: log.date,
           sessionType: log.sessionType,
@@ -459,66 +462,90 @@ function renderHistory() {
   const sprint150Items = findSprintHistory(150);
   const sprint300Items = findSprintHistory(300);
 
-  renderHistoryList(deadliftHistory, deadliftItems, (item) => `
-    <div class="history-entry">
-      <p><strong>${item.date}</strong></p>
-      <p>Workout: ${item.sessionType}</p>
-      <p>Sets: ${item.sets || "-"}</p>
-      <p>Reps: ${item.reps || "-"}</p>
-      <p>Weight: ${item.weight || "-"} kg</p>
-    </div>
-  `);
+  renderHistoryList(
+    deadliftHistory,
+    deadliftItems,
+    (item) => `
+      <div class="history-entry">
+        <p><strong>${item.date}</strong></p>
+        <p>Workout: ${item.sessionType}</p>
+        <p>Sets: ${item.sets || "-"}</p>
+        <p>Reps: ${item.reps || "-"}</p>
+        <p>Weight: ${item.weight || "-"} kg</p>
+      </div>
+    `
+  );
 
-  renderHistoryList(backSquatHistory, squatItems, (item) => `
-    <div class="history-entry">
-      <p><strong>${item.date}</strong></p>
-      <p>Workout: ${item.sessionType}</p>
-      <p>Sets: ${item.sets || "-"}</p>
-      <p>Reps: ${item.reps || "-"}</p>
-      <p>Weight: ${item.weight || "-"} kg</p>
-    </div>
-  `);
+  renderHistoryList(
+    backSquatHistory,
+    squatItems,
+    (item) => `
+      <div class="history-entry">
+        <p><strong>${item.date}</strong></p>
+        <p>Workout: ${item.sessionType}</p>
+        <p>Sets: ${item.sets || "-"}</p>
+        <p>Reps: ${item.reps || "-"}</p>
+        <p>Weight: ${item.weight || "-"} kg</p>
+      </div>
+    `
+  );
 
-  renderHistoryList(jumpHistory, jumpItems, (item) => `
-    <div class="history-entry">
-      <p><strong>${item.date}</strong></p>
-      <p>Exercise: ${item.name}</p>
-      <p>Workout: ${item.sessionType}</p>
-      <p>Sets: ${item.sets || "-"}</p>
-      <p>Jumps/Reps: ${item.jumps || "-"}</p>
-      <p>${item.extra ? `Extra: ${item.extra}` : "Extra: -"}</p>
-    </div>
-  `);
+  renderHistoryList(
+    jumpHistory,
+    jumpItems,
+    (item) => `
+      <div class="history-entry">
+        <p><strong>${item.date}</strong></p>
+        <p>Exercise: ${item.name}</p>
+        <p>Workout: ${item.sessionType}</p>
+        <p>Sets: ${item.sets || "-"}</p>
+        <p>Jumps/Reps: ${item.jumps || "-"}</p>
+        <p>${item.extra ? `Extra: ${item.extra}` : "Extra: -"}</p>
+      </div>
+    `
+  );
 
-  renderHistoryList(sprint200History, sprint200Items, (item) => `
-    <div class="history-entry">
-      <p><strong>${item.date}</strong></p>
-      <p>Workout: ${item.sessionType}</p>
-      <p>Best Time: ${item.bestTime || "-"} sec</p>
-      <p>Average Time: ${item.averageTime || "-"} sec</p>
-      <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
-    </div>
-  `);
+  renderHistoryList(
+    sprint200History,
+    sprint200Items,
+    (item) => `
+      <div class="history-entry">
+        <p><strong>${item.date}</strong></p>
+        <p>Workout: ${item.sessionType}</p>
+        <p>Best Time: ${item.bestTime || "-"} sec</p>
+        <p>Average Time: ${item.averageTime || "-"} sec</p>
+        <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
+      </div>
+    `
+  );
 
-  renderHistoryList(sprint150History, sprint150Items, (item) => `
-    <div class="history-entry">
-      <p><strong>${item.date}</strong></p>
-      <p>Workout: ${item.sessionType}</p>
-      <p>Best Time: ${item.bestTime || "-"} sec</p>
-      <p>Average Time: ${item.averageTime || "-"} sec</p>
-      <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
-    </div>
-  `);
+  renderHistoryList(
+    sprint150History,
+    sprint150Items,
+    (item) => `
+      <div class="history-entry">
+        <p><strong>${item.date}</strong></p>
+        <p>Workout: ${item.sessionType}</p>
+        <p>Best Time: ${item.bestTime || "-"} sec</p>
+        <p>Average Time: ${item.averageTime || "-"} sec</p>
+        <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
+      </div>
+    `
+  );
 
-  renderHistoryList(sprint300History, sprint300Items, (item) => `
-    <div class="history-entry">
-      <p><strong>${item.date}</strong></p>
-      <p>Workout: ${item.sessionType}</p>
-      <p>Best Time: ${item.bestTime || "-"} sec</p>
-      <p>Average Time: ${item.averageTime || "-"} sec</p>
-      <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
-    </div>
-  `);
+  renderHistoryList(
+    sprint300History,
+    sprint300Items,
+    (item) => `
+      <div class="history-entry">
+        <p><strong>${item.date}</strong></p>
+        <p>Workout: ${item.sessionType}</p>
+        <p>Best Time: ${item.bestTime || "-"} sec</p>
+        <p>Average Time: ${item.averageTime || "-"} sec</p>
+        <p>Times: ${item.times?.length ? item.times.join(", ") : "-"}</p>
+      </div>
+    `
+  );
 }
 
 function buildDeadliftChartData() {
@@ -573,11 +600,15 @@ function destroyChart(instance) {
 }
 
 function getChartTextColor() {
-  return getComputedStyle(document.body).getPropertyValue("--text").trim() || "#EAE8FF";
+  return (
+    getComputedStyle(document.body).getPropertyValue("--text").trim() || "#EAE8FF"
+  );
 }
 
 function getChartGridColor() {
-  return getComputedStyle(document.body).getPropertyValue("--border").trim() || "#2A2A3C";
+  return (
+    getComputedStyle(document.body).getPropertyValue("--border").trim() || "#2A2A3C"
+  );
 }
 
 function createLineChart(canvas, labels, data, labelText) {
@@ -736,7 +767,9 @@ function importLogs(event) {
         return;
       }
 
-      const confirmed = confirm("This will replace your current logs. Continue?");
+      const confirmed = confirm(
+        "This will replace your current logs. Continue?"
+      );
       if (!confirmed) return;
 
       saveLogs(importedLogs);
@@ -756,21 +789,14 @@ function importLogs(event) {
 }
 
 async function saveLogToGoogleSheets(log) {
-  const response = await fetch(GOOGLE_SCRIPT_URL, {
+  await fetch(GOOGLE_SCRIPT_URL, {
     method: "POST",
+    mode: "no-cors",
     headers: {
       "Content-Type": "text/plain;charset=utf-8"
     },
     body: JSON.stringify(log)
   });
-
-  const result = await response.json();
-
-  if (!result.success) {
-    throw new Error(result.error || "Unknown Google Sheets error");
-  }
-
-  return result;
 }
 
 function clearLogs() {
@@ -792,7 +818,9 @@ function loadTheme() {
 
 function toggleTheme() {
   document.body.classList.toggle("light");
-  const currentTheme = document.body.classList.contains("light") ? "light" : "dark";
+  const currentTheme = document.body.classList.contains("light")
+    ? "light"
+    : "dark";
   localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
   renderCharts();
 }
@@ -828,8 +856,8 @@ async function handleFormSubmit(event) {
   try {
     await saveLogToGoogleSheets(newLog);
   } catch (error) {
-    console.error("Failed to save to Google Sheets:", error);
-    alert("Saved locally, but failed to save to Google Sheets.");
+    console.error("Failed to send to Google Sheets:", error);
+    alert("Saved locally, but failed to send to Google Sheets.");
   }
 
   renderLogs();
