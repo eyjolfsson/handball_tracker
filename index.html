@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Handball Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="overlay"></div>
+
+    <nav class="navbar">
+      <h1>Handball Tracker</h1>
+      <button id="themeToggle" type="button">Toggle Theme</button>
+    </nav>
+
+    <div class="hero-content hero-layout">
+      <div class="hero-text">
+        <p class="eyebrow">Performance • Strength • Progress</p>
+        <h2>Build strength. Track sessions. Improve every week.</h2>
+        <p>
+          A personal training dashboard for logging handball workouts,
+          conditioning, sprint times, recovery, and weekly progression.
+        </p>
+        <a href="#dashboard" class="btn">Enter Dashboard</a>
+      </div>
+
+      <div class="hero-image-wrap">
+        <img src="handball.jpg" alt="Handball training" class="hero-image" />
+      </div>
+    </div>
+  </header>
+
+  <main id="dashboard" class="container">
+    <section class="card profile-card">
+      <div class="section-heading">
+        <div>
+          <p class="section-label">Athlete Profile</p>
+          <h2>Player Overview</h2>
+        </div>
+        <span class="status-badge">Base Phase</span>
+      </div>
+
+      <div class="profile-grid">
+        <div class="mini-card">
+          <h4>Name</h4>
+          <p>Alex Þór Sveinsson</p>
+        </div>
+        <div class="mini-card">
+          <h4>Position</h4>
+          <p>Left Backcourt</p>
+        </div>
+        <div class="mini-card">
+          <h4>Main Goal</h4>
+          <p>Strength Development</p>
+        </div>
+        <div class="mini-card">
+          <h4>Secondary Goal</h4>
+          <p>Jump Performance</p>
+        </div>
+        <div class="mini-card">
+          <h4>Current Focus</h4>
+          <p>3 Gym Sessions + Conditioning</p>
+        </div>
+        <div class="mini-card">
+          <h4>Injury Note</h4>
+          <p>Old thumb injury</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <div>
+          <p class="section-label">Weekly Structure</p>
+          <h2>Training Week</h2>
+        </div>
+      </div>
+
+      <div class="week-grid">
+        <div class="day">Mon<span>Handball</span></div>
+        <div class="day">Tue<span>Handball</span></div>
+        <div class="day">Wed<span>Workout A</span></div>
+        <div class="day">Thu<span>Workout B</span></div>
+        <div class="day">Fri<span>Handball</span></div>
+        <div class="day">Sat<span>Match</span></div>
+        <div class="day">Sun<span>Workout C</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <div>
+          <p class="section-label">Training Modules</p>
+          <h2>Workout Library</h2>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="workoutA" type="button">Workout A</button>
+        <button class="tab-btn" data-tab="workoutB" type="button">Workout B</button>
+        <button class="tab-btn" data-tab="workoutC" type="button">Workout C</button>
+        <button class="tab-btn" data-tab="conditioning" type="button">Conditioning</button>
+        <button class="tab-btn" data-tab="log" type="button">Log</button>
+        <button class="tab-btn" data-tab="history" type="button">History</button>
+        <button class="tab-btn" data-tab="charts" type="button">Charts</button>
+      </div>
+
+      <div id="workoutA" class="tab-content active">
+        <h3>Workout A — Lower Body High Intensity</h3>
+        <ul>
+          <li>1 Leg Approach Jumps — 5 reps × 3 sets</li>
+          <li>Step Up Knee Drive — 5 reps × 3 sets</li>
+          <li>Step Up Knee Drive Jump — 5 reps × 3 sets</li>
+          <li>Deadlift (Trap Bar or Barbell) — 10 reps × 3 sets</li>
+          <li>Functional Calf Raise — 10 reps × 3 sets</li>
+        </ul>
+      </div>
+
+      <div id="workoutB" class="tab-content">
+        <h3>Workout B — Upper Body High Intensity</h3>
+        <ul>
+          <li>Med Ball Rotational Throw — 7 reps × 3 sets</li>
+          <li>DB 2 Arm 45° Press — 10 reps × 3 sets</li>
+          <li>DB 1 Arm 45° Row + Pause — 10 reps × 3 sets</li>
+          <li>Explosive Tricep Overhead Extensions — 12 reps × 3 sets</li>
+          <li>3-Way Leg Raise — 8 reps each direction × 2 sets</li>
+        </ul>
+      </div>
+
+      <div id="workoutC" class="tab-content">
+        <h3>Workout C — Full Body Medium Intensity</h3>
+        <ul>
+          <li>1 Leg Approach Jumps — 5 reps × 3 sets</li>
+          <li>Hurdle Hops Progressions — 4 hurdle jumps × 3 sets</li>
+          <li>Back Squat — 10 reps × 3 sets</li>
+          <li>Pull Up Progressions — 5–10 reps × 3 sets</li>
+          <li>Military Press + Knee Drive — 10 reps × 3 sets</li>
+        </ul>
+      </div>
+
+      <div id="conditioning" class="tab-content">
+        <h3>Conditioning Sessions</h3>
+
+        <div class="conditioning-grid">
+          <div class="mini-card">
+            <h4>Conditioning A</h4>
+            <p>200m Sprint × 5</p>
+            <p>Rest 1 min between reps</p>
+            <p>Rest 2 min between blocks</p>
+            <p>150m Sprint × 7</p>
+            <p>Rest 45 sec between reps</p>
+          </div>
+
+          <div class="mini-card">
+            <h4>Conditioning B</h4>
+            <p>300m Sprint × 10</p>
+            <p>Rest 1 min between reps</p>
+            <p>Rest 30 sec</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="log" class="tab-content">
+        <h3>Log Session</h3>
+
+        <form id="progressForm">
+          <div class="form-grid">
+            <div>
+              <label for="date">Date</label>
+              <input type="date" id="date" required />
+            </div>
+
+            <div>
+              <label for="sessionType">Session Type</label>
+              <select id="sessionType" required>
+                <option value="">Select Session</option>
+                <option value="Workout A">Workout A</option>
+                <option value="Workout B">Workout B</option>
+                <option value="Workout C">Workout C</option>
+                <option value="Conditioning A">Conditioning A</option>
+                <option value="Conditioning B">Conditioning B</option>
+                <option value="Handball">Handball</option>
+                <option value="Match">Match</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="rpe">RPE</label>
+              <input type="number" id="rpe" placeholder="RPE" min="1" max="20" />
+            </div>
+
+            <div>
+              <label for="duration">Minutes</label>
+              <input type="number" id="duration" placeholder="Minutes" min="0" />
+            </div>
+          </div>
+
+          <div id="exerciseSection" class="exercise-section">
+            <div class="section-heading exercise-heading">
+              <div>
+                <p class="section-label">Exercise Details</p>
+                <h4>Session Exercises</h4>
+              </div>
+            </div>
+            <div id="exerciseFields"></div>
+          </div>
+
+          <div>
+            <label for="notes">Notes</label>
+            <textarea id="notes" placeholder="Notes"></textarea>
+          </div>
+
+          <button type="submit" class="btn">Save</button>
+        </form>
+
+        <div class="saved-log">
+          <div class="saved-log-header">
+            <h4>Saved Sessions</h4>
+            <button id="clearLogs" type="button" class="danger-btn">Clear All</button>
+          </div>
+          <div id="logList"></div>
+        </div>
+      </div>
+
+      <div id="history" class="tab-content">
+        <h3>History</h3>
+
+        <div class="history-grid">
+          <div class="mini-card history-card">
+            <h4>Deadlift History</h4>
+            <div id="deadliftHistory" class="history-list"></div>
+          </div>
+
+          <div class="mini-card history-card">
+            <h4>Back Squat History</h4>
+            <div id="backSquatHistory" class="history-list"></div>
+          </div>
+
+          <div class="mini-card history-card">
+            <h4>Jump History</h4>
+            <div id="jumpHistory" class="history-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="charts" class="tab-content">
+        <h3>Charts</h3>
+
+        <div class="charts-grid">
+          <div class="mini-card chart-card">
+            <h4>Deadlift Weight Over Time</h4>
+            <div class="chart-wrap">
+              <canvas id="deadliftChart"></canvas>
+            </div>
+          </div>
+
+          <div class="mini-card chart-card">
+            <h4>Back Squat Weight Over Time</h4>
+            <div class="chart-wrap">
+              <canvas id="backSquatChart"></canvas>
+            </div>
+          </div>
+
+          <div class="mini-card chart-card">
+            <h4>Jump Volume Over Time</h4>
+            <div class="chart-wrap">
+              <canvas id="jumpChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Handball Tracker © 2026</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
